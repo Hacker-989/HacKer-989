@@ -1,0 +1,214 @@
+#!/bin/bash
+myip=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | head -n1`;
+myint=`ifconfig | grep -B1 "inet addr:$myip" | head -n1 | awk '{print $1}'`;
+
+flag=0
+
+echo
+
+function create_user() {
+	useradd -M $uname
+	echo "$uname:$pass" | chpasswd
+	usermod -e $expdate $uname
+
+myip=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | head -n1`;
+myint=`ifconfig | grep -B1 "inet addr:$myip" | head -n1 | awk '{print $1}'`;
+  myip2="s/ipserver/$myip/g";	
+	wget -qO /home/vps/public_html/client.ovpn "http://dragon9699.club/autoscript/client.ovpn"                                                                                        sed -i "s/ipserver/$myip/g" /home/vps/public_html/client.ovpn
+	echo ""
+	echo "♦===========Ranger===========♦"	
+ 	echo "  User Successfully Create"
+	echo ""                           
+	echo "  Username : $uname"                     
+	echo "  Expdate  : $expdate"                
+	echo ""                           
+	echo "  Thanks for Choosing us"   
+	echo "♦===========Dragon============♦"
+	echo ""
+}
+
+function renew_user() {
+	echo "New expiration date for $uname: $expdate...";
+	usermod -e $expdate $uname
+	echo ""
+	echo "♦Successfully renew $uname !♦"
+	echo ""
+	echo "New expired date : $expdate"
+	echo ""
+}
+
+function delete_user(){
+	userdel $uname
+	echo ""
+	echo "♦Successfully remove $uname !♦"
+	echo ""
+}
+
+function expired_users(){
+	cat /etc/shadow | cut -d: -f1,8 | sed /:$/d > /tmp/expirelist.txt
+	totalaccounts=`cat /tmp/expirelist.txt | wc -l`
+	for((i=1; i<=$totalaccounts; i++ )); do
+		tuserval=`head -n $i /tmp/expirelist.txt | tail -n 1`
+		username=`echo $tuserval | cut -f1 -d:`
+		userexp=`echo $tuserval | cut -f2 -d:`
+		userexpireinseconds=$(( $userexp * 86400 ))
+		todaystime=`date +%s`
+		if [ $userexpireinseconds -lt $todaystime ] ; then
+			echo $username
+		fi
+	done
+	rm /tmp/expirelist.txt
+}
+
+function not_expired_users(){
+    cat /etc/shadow | cut -d: -f1,8 | sed /:$/d > /tmp/expirelist.txt
+    totalaccounts=`cat /tmp/expirelist.txt | wc -l`
+    for((i=1; i<=$totalaccounts; i++ )); do
+        tuserval=`head -n $i /tmp/expirelist.txt | tail -n 1`
+        username=`echo $tuserval | cut -f1 -d:`
+        userexp=`echo $tuserval | cut -f2 -d:`
+        userexpireinseconds=$(( $userexp * 86400 ))
+        todaystime=`date +%s`
+        if [ $userexpireinseconds -gt $todaystime ] ; then
+            echo $username
+        fi
+    done
+	rm /tmp/expirelist.txt
+}
+
+function used_data(){
+	myip=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | head -n1`
+	myint=`ifconfig | grep -B1 "inet addr:$myip" | head -n1 | awk '{print $1}'`
+	ifconfig $myint | grep "RX bytes" | sed -e 's/ *RX [a-z:0-9]*/Received: /g' | sed -e 's/TX [a-z:0-9]*/\nTransfered: /g'
+}
+
+clear
+echo ""
+echo "         
+               =====================Ranger=====================
+              ♦                                              ♦
+              ♦         AUTOSCRIPT CREATED BY HacKer_Vpn     ♦
+              ♦       -----------Contact Us------------      ♦  
+              ♦            Tel : +60143749392                ♦
+              ♦              { Sms/telegram }                ♦
+              ♦                 @Chandra989                  ♦
+              ♦            http://chandra989.tk              ♦
+              ♦                                              ♦
+                ===================HacKer989=================
+
+";
+PS3='Please enter your choice: '
+options=("Add User" "Renew User" "Delete User" "User List" "Users Not Expired" "Expired Users" "Restart Server" "Change Password" "Used Data By Users" "Ram Status" "Monitor Multi Login" "Download Client" "Change OpenVPN Port" "Change Dropbear Port" "Change Squid3 Port" "Update Server" "Quit")
+select opt in "${options[@]}"
+do
+    case $opt in
+        "Add User")
+            read -p "Enter username: " uname
+            read -p "Enter password: " pass
+            read -p "Enter expiry date (YYYY-MM-DD): " expdate
+	    create_user
+	    break
+            ;;
+        "Renew User")
+            read -p "Enter username to renew: " uname
+            read -p "Enter expiry date (YYYY-MM-DD): " expdate
+            renew_user
+            break
+            ;;
+        "Delete User")
+            read -p "Enter username to be removed: " uname
+            delete_user
+            break
+            ;;		
+		"User List")
+            user-list
+            break
+            ;;
+		"Users Not Expired")
+			not_expired_users
+			break
+			;;
+		"Expired Users")
+			expired_users
+			break
+			;;		
+		"Restart Server")
+			reboot
+			break
+			;;	
+		"Change Password")
+			passwd
+			break
+			;;
+		"Used Data By Users")
+			used_data
+			break
+			;;
+		"Ram Status")
+		    free -h | grep -v + > /tmp/ramcache
+            cat /tmp/ramcache | grep -v "Swap"
+            break
+              ;;
+       "Monitor Multi Login")
+               monssh
+                break
+	          ;;
+        "Download Client")
+		       myip=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | head -n1`;
+myint=`ifconfig | grep -B1 "inet addr:$myip" | head -n1 | awk '{print $1}'`;
+	myip2="s/ipserver/$myip/g";	
+	wget -qO /home/vps/public_html/client.ovpn "http://dragon9699.club/autoscript/client.ovpn"
+	sed -i "s/ipserver/$myip/g" /home/vps/public_html/client.ovpn
+
+	echo ""
+	echo "♦Download your client config♦"
+	echo ""
+	echo "http://$myip/client.ovpn"
+	echo ""
+		       break
+			   ;;
+		"Change OpenVPN Port")
+	    echo ""
+            echo "What OpenVPN port would you like  to change to?"
+            read -p "Port: " -e -i 1194 PORT
+            sed -i "s/port [0-9]*/port $PORT/" /etc/openvpn/1194.conf
+            service openvpn restart
+            echo "OpenVPN Updated : Port $PORT"
+            echo ""
+			break
+			;;
+		"Change Dropbear Port")
+	    echo ""	
+            echo "What Dropbear port would you like to change to?"
+            read -p "Port: " -e -i 443 PORT
+            sed -i "s/DROPBEAR_PORT=[0-9]*/DROPBEAR_PORT=$PORT/" /etc/default/dropbear
+            service dropbear restart
+            echo "Dropbear Updated : Port $PORT"
+            echo ""
+			break
+			;;
+        "Change Squid3 Port")
+	    echo ""	
+            echo "What Squid3 port would you like to change to?"
+            read -p "Port: " -e -i 8080 PORT
+            sed -i "s/http_port [0-9]*/http_port $PORT/" /etc/squid3/squid.conf
+            service squid3 restart
+            echo""
+            echo "♦Squid3 updated : Port $PORT♦"
+
+            echo ""
+			break
+			;;
+        "Update Server")
+         apt-get update
+         echo ""
+         echo "♦Your server ready to work now♦"
+         echo ""
+          break
+           ;;		  
+        "Quit")
+            break
+            ;;
+        *) echo invalid option;;
+    esac
+done
